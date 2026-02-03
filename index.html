@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>WM Discador</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;margin:0;padding:20px}
+h1{margin:0 0 15px}
+.card{background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.btn{border:none;border-radius:6px;padding:6px 10px;cursor:pointer}
+.btn-whats{background:#25d366;color:#fff}
+.btn-follow{background:#0d6efd;color:#fff;margin-left:6px}
+.btn-whats.bloqueado{background:#9ca3af;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<h1>WM Discador</h1>
+<div id="lista"></div>
+
+<script>
+let contatos = [];
+let mensagens = [];
+let mensagensFollow = [];
+
+// ===== Persistência =====
+const salvos = localStorage.getItem("leads_salvos");
+if(salvos){ contatos = JSON.parse(salvos); }
+function salvarLeads(){ localStorage.setItem("leads_salvos", JSON.stringify(contatos)); }
+
+// ===== Utils =====
+function formatarNome(n){
+ return n.toLowerCase().trim().split(/\s+/).map(p=>p[0].toUpperCase()+p.slice(1)).join(" ");
+}
+function saudacao(){
+ const h=new Date().getHours();
+ if(h<12) return "bom dia";
+ if(h<18) return "boa tarde";
+ return "boa noite";
+}
+
+// ===== Cooldown global =====
+const INTERVALO = 2*60*1000;
+function podeEnviar(){
+ const u=localStorage.getItem("ultimoEnvio");
+ if(!u) return {ok:true};
+ const d=Date.now()-Number(u);
+ if(d>=INTERVALO) return {ok:true};
+ return {ok:false,restante:Math.ceil((INTERVALO-d)/1000)};
+}
+function registrarEnvio(){ localStorage.setItem("ultimoEnvio",Date.now()); }
+
+// ===== Mensagens =====
+function mensagemInicial(idx){
+ const i = Math.floor(Math.random()*mensagens.length);
+ contatos[idx].msgIndex = i;
+ contatos[idx].enviadoEm = Date.now();
+ contatos[idx].status = "enviado";
+ salvarLeads();
+ return mensagens[i];
+}
+function mensagemFollow(idx){
+ const i = contatos[idx].msgIndex;
+ contatos[idx].status = "followup";
+ salvarLeads();
+ return mensagensFollow[i] || mensagensFollow[0];
+}
+
+// ===== Render =====
+function render(){
+ const div=document.getElementById("lista");
+ div.innerHTML="";
+ contatos.forEach((c,idx)=>{
+  const card=document.createElement("div");
+  card.className="card";
+  const nome=document.createElement("div");
+  nome.textContent=c.nome+" - "+c.numero;
+
+  const acoes=document.createElement("div");
+
+  const bw=document.createElement("button");
+  bw.className="btn btn-whats";
+  bw.textContent="WhatsApp";
+  bw.onclick=()=>{
+    const t=podeEnviar();
+    if(!t.ok){alert("Aguarde "+t.restante+"s");return;}
+    const base = !c.status ? mensagemInicial(idx) : mensagemFollow(idx);
+    const texto=`Olá, ${formatarNome(c.nome)} ${saudacao()}\n\n${base}`;
+    window.open("https://wa.me/55"+c.numero.replace(/\D/g,"")+"?text="+encodeURIComponent(texto));
+    registrarEnvio();
+    const lead=contatos.splice(idx,1)[0];
+    contatos.push(lead);
+    salvarLeads();
+    render();
+  };
+  acoes.appendChild(bw);
+
+  if(c.status==="enviado" && Date.now()-c.enviadoEm>=48*60*60*1000){
+    const bf=document.createElement("button");
+    bf.className="btn btn-follow";
+    bf.textContent="Follow-up";
+    bf.onclick=bw.onclick;
+    acoes.appendChild(bf);
+  }
+
+  card.appendChild(nome);
+  card.appendChild(acoes);
+  div.appendChild(card);
+ });
+}
+
+// ===== Load JSON =====
+fetch("messages.json").then(r=>r.json()).then(d=>{mensagens=d;});
+fetch("messages_followup.json").then(r=>r.json()).then(d=>{mensagensFollow=d;});
+
+render();
+</script>
+
+</body>
+</html>
