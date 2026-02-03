@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wm Discador</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;background:#f4f6f9;color:#333;padding-bottom:80px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:#fff;border-bottom:2px solid #e5e7eb}
+#top-bar{display:flex;flex-wrap:wrap;gap:12px;padding:16px 32px;background:#fafafa;border-bottom:1px solid #ddd}
+button{padding:10px 18px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+.btn-whats{background:#25D366;color:#fff}
+.btn-reset{background:#6c757d;color:#fff}
+.btn-backup{background:#007bff;color:#fff}
+textarea,input{padding:9px;border-radius:8px;border:1px solid #ccc}
+.contato-card{background:#fff;margin:16px 32px;padding:18px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.contato-top{display:flex;gap:12px;align-items:center}
+footer{position:fixed;bottom:0;width:100%;padding:14px;background:#003366;color:#fff;text-align:center}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Wm Discador</h1>
+  <button class="btn-reset" onclick="resetGeral()">🔄 Reset</button>
+</header>
+
+<div id="top-bar">
+  <input type="file" id="fileInput" accept=".csv,.txt">
+  <textarea id="pasteInput" rows="2" placeholder="Cole: Nome, Número"></textarea>
+  <button onclick="importarColado()">📥 Importar</button>
+  <button class="btn-backup" onclick="exportarCSV()">💾 Backup</button>
+</div>
+
+<p id="contador" style="padding:16px 32px">📊 Contatos feitos hoje: 0</p>
+
+<div id="meta" style="margin:0 32px;background:#fff;padding:12px;border-radius:8px">
+🎯 Meta diária: 50 — <span id="progressoTxt">0/50</span>
+<div style="height:12px;background:#eee;border-radius:6px;margin-top:6px">
+  <div id="barra" style="height:100%;width:0%;background:#25D366"></div>
+</div>
+</div>
+
+<div id="lista"></div>
+
+<footer>© 2025 WM Assessoria</footer>
+
+<script>
+let contatos = JSON.parse(localStorage.getItem("wm_leads")) || [];
+let feitos = JSON.parse(localStorage.getItem("wm_feitos")) || [];
+const META = 50;
+const COOLDOWN = 2 * 60 * 1000;
+
+const salvar = () => {
+  localStorage.setItem("wm_leads", JSON.stringify(contatos));
+  localStorage.setItem("wm_feitos", JSON.stringify(feitos));
+};
+
+fileInput.onchange = e => {
