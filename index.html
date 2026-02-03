@@ -1,216 +1,147 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
 <title>Wm Discador</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Poppins',sans-serif;background:#f4f6f9;color:#333;padding-bottom:80px}
-header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:#fff;border-bottom:2px solid #e5e7eb}
-.logo-box{display:flex;align-items:center;gap:16px}
-.logo-box img{height:60px}
-header h1{font-size:26px;color:#003366;font-weight:600}
-#top-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px 32px;background:#fafafa;border-bottom:1px solid #ddd}
-button{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;transition:.25s;white-space:nowrap}
-button:hover{opacity:.9;transform:translateY(-2px)}
-.btn-ligar{background:#dc3545;color:#fff}
+body{font-family:Poppins,sans-serif;background:#f4f6f9;margin:0}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:#fff;border-bottom:1px solid #ddd}
+h1{color:#003366}
+#top-bar{display:flex;gap:10px;flex-wrap:wrap;padding:16px 32px;background:#fafafa;border-bottom:1px solid #ddd}
+button{padding:8px 14px;border:none;border-radius:6px;font-weight:600;cursor:pointer}
 .btn-whats{background:#25D366;color:#fff}
-.btn-salvar{background:#ff9800;color:#fff}
-.btn-backup{background:#007bff;color:#fff}
 .btn-reset{background:#6c757d;color:#fff}
-.btn-acoes{background:#f1f3f5;color:#333}
-input[type="text"],select,textarea{padding:9px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px}
-textarea{resize:vertical}
-#contador{padding:16px 32px;font-weight:600;color:#444}
-.contato-card{background:#fff;margin:16px 32px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:18px 22px}
-.contato-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:10px}
-.contato-top span.nome{font-weight:600;min-width:230px}
-.contato-top span.numero{color:#555}
-.formulario{margin-top:10px;display:grid;gap:8px}
-.formulario select,.formulario textarea{border:1px solid #ccc;border-radius:8px;font-size:14px;padding:8px}
-h2.section{margin:32px 32px 8px;font-size:22px;color:#003366}
-table{width:calc(100% - 64px);margin:0 32px 32px;border-collapse:collapse}
-thead{background:#003366;color:#fff}
-th,td{padding:10px;border:1px solid #d1d5db;font-size:14px;text-align:left}
-tbody tr:nth-child(even){background:#f9fafb}
-footer{position:fixed;bottom:0;width:100%;padding:14px;background:#003366;color:#fff;text-align:center;font-size:13px}
+.btn-backup{background:#007bff;color:#fff}
+.contato-card{background:#fff;margin:16px 32px;padding:14px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+footer{position:fixed;bottom:0;width:100%;background:#003366;color:#fff;text-align:center;padding:10px}
 </style>
 </head>
+
 <body>
 
 <header>
-  <div class="logo-box">
-    <img src="logo.png">
-    <h1>Wm Discador</h1>
-  </div>
-  <button class="btn-reset" onclick="resetGeral()">🔄 Reset Geral</button>
+  <h1>Wm Discador</h1>
+  <button class="btn-reset" onclick="resetGeral()">Reset Geral</button>
 </header>
 
 <div id="top-bar">
   <input type="file" id="fileInput" accept=".csv,.txt">
-  <textarea id="pasteInput" placeholder="📋 Cole aqui a lista de contatos (Nome, Número)" rows="3" style="width:280px;"></textarea>
-  <button class="btn-acoes" onclick="importarColado()">📥 Importar colados</button>
-  <input type="text" id="filtroNome" placeholder="🔍 Filtrar nome">
-  <select id="filtroLead">
-    <option value="">Todos os leads</option>
-    <option value="Quente">🔥 Quente</option>
-    <option value="Frio">❄️ Frio</option>
-    <option value="Aguardando">⏳ Aguardando</option>
-  </select>
-  <button class="btn-acoes" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-  <button class="btn-backup" onclick="exportarCSV()">💾 Backup</button>
+  <textarea id="pasteInput" rows="2" placeholder="Nome, Número"></textarea>
+  <button onclick="importarColado()">Importar colados</button>
+  <button class="btn-backup" onclick="exportarCSV()">Backup</button>
 </div>
 
-<p id="contador">📊 Contatos feitos hoje: 0</p>
-
-<div id="meta-box" style="margin:10px 32px 0;background:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-  <div style="display:flex;gap:12px;flex-wrap:wrap">
-    <span><b>🎯 Meta diária:</b> <span id="metaValor">50</span></span>
-    <span>Progresso: <span id="metaProgresso">0/50</span></span>
-  </div>
-  <div style="margin-top:8px;height:14px;background:#e5e7eb;border-radius:8px">
-    <div id="progresso" style="height:100%;width:0%;background:#25D366"></div>
-  </div>
-</div>
+<p id="contador" style="padding:0 32px;font-weight:600">Contatos feitos hoje: 0</p>
 
 <div id="lista-contatos"></div>
 
-<h2 class="section">📜 Histórico de Ligações</h2>
-<table id="contatos-feitos">
-<thead><tr><th>Nome</th><th>Número</th><th>Status</th><th>Informações</th><th>Lead</th><th>Data/Hora</th></tr></thead>
-<tbody></tbody>
-</table>
-
-<footer>© 2025 WM Assessoria</footer>
+<footer>WM Discador</footer>
 
 <script>
-/* ===== INÍCIO MOD: estado base ===== */
-let contatos = JSON.parse(localStorage.getItem("wm_contatos_pendentes")) || [];
-let contatosFeitos = JSON.parse(localStorage.getItem("contatosFeitos")) || [];
-let estadoLeads = JSON.parse(localStorage.getItem("wm_estado_leads")) || {};
-const META_DIARIA = 50;
-const TEMPO_SEM_RESPOSTA = 48 * 60 * 60 * 1000;
-const INTERVALO_ENVIO = 2 * 60 * 1000;
+// ================= BASE =================
+let contatos = JSON.parse(localStorage.getItem("wm_contatos")) || [];
+let feitos = JSON.parse(localStorage.getItem("wm_feitos")) || [];
 
-function salvarContatos(){localStorage.setItem("wm_contatos_pendentes",JSON.stringify(contatos));}
-function salvarEstadoLeads(){localStorage.setItem("wm_estado_leads",JSON.stringify(estadoLeads));}
-/* ===== FIM MOD ===== */
+function salvar(){
+  localStorage.setItem("wm_contatos", JSON.stringify(contatos));
+  localStorage.setItem("wm_feitos", JSON.stringify(feitos));
+}
 
-let bancoMensagens=[], bancoFollowup=[];
-fetch("messages.json").then(r=>r.json()).then(d=>bancoMensagens=d);
-fetch("messages_followup.json").then(r=>r.json()).then(d=>bancoFollowup=d);
+// ================= IMPORTAÇÃO ARQUIVO =================
+document.getElementById("fileInput").addEventListener("change", e=>{
+  const file = e.target.files[0];
+  if(!file) return;
 
-fileInput.onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{
+  const reader = new FileReader();
+  reader.onload = ev=>{
     ev.target.result.split(/\r?\n/).forEach(l=>{
-      const[n,t]=l.split(/,|;/);
-      if(n&&t) contatos.push({nome:n.trim(),numero:t.trim()});
+      const [nome,numero] = l.split(/,|;/);
+      if(nome && numero){
+        contatos.push({nome:nome.trim(), numero:numero.trim()});
+      }
     });
-    salvarContatos();renderizarContatos();atualizarContador();
+    salvar();
+    render();
   };
-  r.readAsText(f);
-};
+  reader.readAsText(file);
+});
 
+// ================= COLAR LEADS =================
 function importarColado(){
-  pasteInput.value.split(/\r?\n/).forEach(l=>{
-    const[n,t]=l.split(/,|;/);
-    if(n&&t) contatos.push({nome:n.trim(),numero:t.trim()});
+  const texto = document.getElementById("pasteInput").value.trim();
+  if(!texto) return alert("Cole os contatos");
+
+  texto.split(/\r?\n/).forEach(l=>{
+    const [nome,numero] = l.split(/,|;/);
+    if(nome && numero){
+      contatos.push({nome:nome.trim(), numero:numero.trim()});
+    }
   });
-  pasteInput.value="";
-  salvarContatos();renderizarContatos();atualizarContador();
+
+  document.getElementById("pasteInput").value="";
+  salvar();
+  render();
 }
 
-function formatarNome(n){
-  return n.toLowerCase().split(/\s+/).map(p=>p[0].toUpperCase()+p.slice(1)).join(" ");
-}
-function saudacao(){
-  const h=new Date().getHours();
-  return h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
+// ================= WHATSAPP =================
+function enviarWhats(i){
+  const c = contatos[i];
+  const num = c.numero.replace(/\D/g,"");
+  const msg = "Olá " + c.nome;
+
+  window.open("https://wa.me/55"+num+"?text="+encodeURIComponent(msg));
+  feitos.push({nome:c.nome,data:new Date().toLocaleDateString()});
+  contatos.splice(i,1);
+  salvar();
+  render();
 }
 
-function podeEnviarGlobal(){
-  const u=localStorage.getItem("wm_ultimo_envio");
-  if(!u) return true;
-  return Date.now()-u>=INTERVALO_ENVIO;
-}
-function registrarEnvio(){localStorage.setItem("wm_ultimo_envio",Date.now());}
+// ================= RENDER =================
+function render(){
+  const lista = document.getElementById("lista-contatos");
+  lista.innerHTML="";
 
-function gerarMensagem(nome,numero){
-  if(!estadoLeads[numero]){
-    estadoLeads[numero]={enviadoEm:Date.now(),indice:Math.floor(Math.random()*bancoMensagens.length),followup:false};
-  }
-  let msg=bancoMensagens[estadoLeads[numero].indice];
-  msg=msg.replaceAll("{{nome}}",formatarNome(nome));
-  if(!msg.toLowerCase().includes(formatarNome(nome).toLowerCase())){
-    msg=`${saudacao()} ${formatarNome(nome)},\n\n${msg}`;
-  }
-  salvarEstadoLeads();
-  return msg;
-}
-
-function gerarFollowup(nome,numero){
-  const e=estadoLeads[numero];
-  if(!e||e.followup||Date.now()-e.enviadoEm<TEMPO_SEM_RESPOSTA) return null;
-  let msg=bancoFollowup[e.indice];
-  msg=msg.replaceAll("{{nome}}",formatarNome(nome));
-  e.followup=true; salvarEstadoLeads();
-  return msg;
-}
-
-function renderizarContatos(){
-  lista-contatos.innerHTML="";
   contatos.forEach((c,i)=>{
-    const d=document.createElement("div");
-    d.className="contato-card";
-    d.innerHTML=`<div class="contato-top">
-      <span class="nome">${c.nome}</span>
-      <span class="numero">${c.numero}</span>
-      <button class="btn-whats">💬 WhatsApp</button>
-    </div>`;
-    d.querySelector(".btn-whats").onclick=()=>{
-      if(!podeEnviarGlobal()) return alert("Aguarde o intervalo de envio");
-      const num=c.numero.replace(/\D/g,"");
-      let msg=gerarFollowup(c.nome,num)||gerarMensagem(c.nome,num);
-      registrarEnvio();
-      window.open("https://wa.me/55"+num+"?text="+encodeURIComponent(msg));
-      contatos.push(contatos.splice(i,1)[0]);
-      salvarContatos();renderizarContatos();
-    };
-    lista-contatos.appendChild(d);
+    const div = document.createElement("div");
+    div.className="contato-card";
+    div.innerHTML = `
+      <b>${c.nome}</b> - ${c.numero}
+      <button class="btn-whats" onclick="enviarWhats(${i})">Whats</button>
+    `;
+    lista.appendChild(div);
   });
+
+  atualizarContador();
 }
 
 function atualizarContador(){
-  const hoje=new Date().toLocaleDateString();
-  const total=contatosFeitos.filter(c=>c.dataHora&&c.dataHora.startsWith(hoje)).length;
-  contador.textContent="📊 Contatos feitos hoje: "+total;
-  metaProgresso.textContent=`${total}/${META_DIARIA}`;
-  progresso.style.width=Math.min(total/META_DIARIA*100,100)+"%";
+  const hoje = new Date().toLocaleDateString();
+  const total = feitos.filter(f=>f.data===hoje).length;
+  document.getElementById("contador").innerText = "Contatos feitos hoje: "+total;
 }
 
-function limparFiltros(){
-  filtroNome.value="";filtroLead.value="";
-  renderizarContatos();
-}
+// ================= OUTROS =================
 function exportarCSV(){
-  const csv="Nome,Número\n"+contatos.map(c=>`${c.nome},${c.numero}`).join("\n");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="leads.csv";a.click();
+  const csv = "Nome,Número\n" + contatos.map(c=>`${c.nome},${c.numero}`).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download = "leads.csv";
+  a.click();
 }
+
 function resetGeral(){
   if(confirm("Apagar tudo?")){
-    contatos=[];contatosFeitos=[];estadoLeads={};
+    contatos=[]; feitos=[];
     localStorage.clear();
-    renderizarContatos();atualizarContador();
+    render();
   }
 }
 
-renderizarContatos();atualizarContador();
+render();
 </script>
 </body>
 </html>
