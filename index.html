@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WM Discador</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body{font-family:Poppins,Arial,sans-serif;background:#f4f6f9;margin:0;padding-bottom:120px}
+header{background:#fff;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #e5e7eb}
+button{padding:8px 14px;border:none;border-radius:6px;font-weight:600;cursor:pointer}
+.btn-whats{background:#25D366;color:#fff}
+.btn-ligar{background:#dc3545;color:#fff}
+.btn-salvar{background:#ff9800;color:#fff}
+.btn-reset{background:#6c757d;color:#fff}
+.contato-card{background:#fff;margin:16px 32px;padding:16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.contato-top{display:flex;gap:12px;align-items:center}
+.nome{font-weight:600}
+.numero{color:#555}
+#contador-box{margin:20px 32px;background:#fff;padding:16px;border-radius:8px}
+#barra{width:100%;height:12px;background:#ddd;border-radius:6px;overflow:hidden}
+#progresso{height:100%;width:0;background:#25D366}
+footer{position:fixed;bottom:0;width:100%;background:#003366;color:#fff;text-align:center;padding:10px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>WM Discador</h1>
+<button class="btn-reset" onclick="resetGeral()">Reset</button>
+</header>
+
+<div id="contador-box">
+<div id="contador">📊 Contatos feitos hoje: 0</div>
+<div>🎯 Meta diária: 50</div>
+<div id="barra"><div id="progresso"></div></div>
+</div>
+
+<div id="lista-contatos"></div>
+
+<footer>© 2026 WM Assessoria</footer>
+
+<script>
+const META_DIARIA = 50;
+const LIMITE_DIARIO_POR_NUMERO = 2;
+const TEMPO_SEM_RESPOSTA = 48 * 60 * 60 * 1000;
+
+let contatos = [
+  {nome:"Exemplo Lead", numero:"11999999999"}
+];
+
+let contatosFeitos = JSON.parse(localStorage.getItem("contatosFeitos")) || [];
+let controleResposta = JSON.parse(localStorage.getItem("controleResposta")) || [];
+
+function hoje(){return new Date().toLocaleDateString();}
+
+function atualizarContador(){
+  const total = contatosFeitos.filter(c=>c.dataHora.startsWith(hoje())).length;
+  document.getElementById("contador").innerText = "📊 Contatos feitos hoje: " + total;
+  document.getElementById("progresso").style.width = Math.min((total/META_DIARIA)*100,100)+"%";
+}
+
+function registrarPrimeiroContato(nome,numero){
+  if( controleResposta.find(r=>r.numero===numero) ) return;
+  controleResposta.push({nome,numero,primeiraTentativa:Date.now(),respondido:false});
+  localStorage.setItem("controleResposta",JSON.stringify(controleResposta));
+}
+
+function marcarRespondido(numero){
+  const r = controleResposta.find(r=>r.numero===numero);
+  if(r){r.respondido=true;localStorage.setItem("controleResposta",JSON.stringify(controleResposta));}
+}
+
+function moverSemResposta(){
+  const agora = Date.now();
+  controleResposta.forEach(r=>{
+    if(!r.respondido && agora-r.primeiraTentativa>=TEMPO_SEM_RESPOSTA){
+      contatosFeitos.push({
+        nome:r.nome,
+        numero:r.numero,
+        status:"Sem resposta (48h)",
+        info:"",
+        lead:"Aguardando",
+        dataHora:new Date(r.primeiraTentativa+TEMPO_SEM_RESPOSTA).toLocaleString()
+      });
+      r.respondido=true;
+    }
+  });
+  localStorage.setItem("controleResposta",JSON.stringify(controleResposta));
+  localStorage.setItem("contatosFeitos",JSON.stringify(contatosFeitos));
+}
+
+function podeEnviar(numero){
+  const hojeISO=new Date().toISOString().slice(0,10);
+  const key="limite_"+numero;
+  let d=JSON.parse(localStorage.getItem(key))||{data:hojeISO,count:0};
+  if(d.data!==hojeISO){d={data:hojeISO,count:0};}
+  if(d.count>=LIMITE_DIARIO_POR_NUMERO) return false;
+  d.count++;localStorage.setItem(key,JSON.stringify(d));return true;
+}
+
+function renderizar(){
+  moverSemResposta();
+  atualizarContador();
+  const lista=document.getElementById("lista-contatos");
+  lista.innerHTML="";
+  contatos.forEach((c,idx)=>{
+    const card=document.createElement("div");
+    card.className="contato-card";
+    card.innerHTML=`<div class="contato-top">
+      <span class="nome">${c.nome}</span>
+      <span class="numero">${c.numero}</span>
+      <button class="btn-whats">WhatsApp</button>
+      <button class="btn-ligar">Ligar</button>
+      <button class="btn-salvar">Salvar</button>
+    </div>`;
+    const btnW=card.querySelector(".btn-whats");
+    const btnS=card.querySelector(".btn-salvar");
+    btnW.onclick=()=>{
+      const num=c.numero.replace(/\D/g,"");
+      if(!podeEnviar(num)){alert("Limite diário atingido");return;}
+      registrarPrimeiroContato(c.nome,num);
+      window.open("https://wa.me/55"+num+"?text="+encodeURIComponent("Olá "+c.nome)," _blank");
+    };
+    btnS.onclick=()=>{
+      marcarRespondido(c.numero.replace(/\D/g,""));
+      contatosFeitos.push({
+        nome:c.nome,numero:c.numero,status:"Respondido",info:"",lead:"",dataHora:new Date().toLocaleString()
+      });
+      contatos.splice(idx,1);
+      localStorage.setItem("contatosFeitos",JSON.stringify(contatosFeitos));
+      renderizar();
+    };
+    lista.appendChild(card);
+  });
+}
+
+function resetGeral(){
+  if(confirm("Apagar tudo?")){
+    localStorage.clear();
+    contatosFeitos=[];controleResposta=[];
+    renderizar();
+  }
+}
+
+renderizar();
+</script>
+</body>
+</html>
