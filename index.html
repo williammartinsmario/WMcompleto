@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WM Discador</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;background:#f4f6f9;color:#333;padding-bottom:120px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:#fff;border-bottom:2px solid #e5e7eb}
+button{padding:10px 18px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+.btn-whats{background:#25D366;color:#fff}
+.btn-whats.bloqueado{background:#9ca3af !important;cursor:not-allowed}
+.btn-ligar{background:#dc3545;color:#fff}
+.btn-salvar{background:#ff9800;color:#fff}
+.btn-reset{background:#6c757d;color:#fff}
+#contador-box{margin:16px 32px;background:#fff;padding:16px;border-radius:10px}
+#barra{width:100%;height:14px;background:#e5e7eb;border-radius:8px;overflow:hidden}
+#progresso{height:100%;width:0;background:#25D366}
+.contato-card{background:#fff;margin:16px 32px;padding:16px;border-radius:10px}
+.contato-top{display:flex;gap:12px;align-items:center}
+.nome{font-weight:600}
+.numero{color:#555}
+.formulario{margin-top:10px;display:grid;gap:8px}
+footer{position:fixed;bottom:0;width:100%;background:#003366;color:#fff;text-align:center;padding:12px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>WM Discador</h1>
+<button class="btn-reset" onclick="resetGeral()">Reset</button>
+</header>
+
+<div id="contador-box">
+<div id="contador">📊 Contatos feitos hoje: 0</div>
+<div>🎯 Meta diária: 50</div>
+<div id="barra"><div id="progresso"></div></div>
+</div>
+
+<div id="lista-contatos"></div>
+
+<footer>© 2026 WM Assessoria</footer>
+
+<script>
+const META_DIARIA = 50;
+const LIMITE_DIARIO_POR_NUMERO = 2;
+const INTERVALO_ENTRE_MENSAGENS = 3 * 60 * 1000;
+
+let contatos = [];
+let contatosFeitos = JSON.parse(localStorage.getItem("contatosFeitos")) || [];
+
+function hoje(){return new Date().toLocaleDateString();}
+
+function atualizarContador(){
+  const total = contatosFeitos.filter(c=>c.dataHora.startsWith(hoje())).length;
+  document.getElementById("contador").textContent = "📊 Contatos feitos hoje: " + total;
+  document.getElementById("progresso").style.width = Math.min((total/META_DIARIA)*100,100)+"%";
+}
+
+function podeEnviarAgora(){
+  const ultimo = localStorage.getItem("ultimoEnvioWhats");
+  if(!ultimo) return {ok:true};
+  const diff = Date.now() - parseInt(ultimo);
+  if(diff >= INTERVALO_ENTRE_MENSAGENS) return {ok:true};
+  return {ok:false,restante:Math.ceil((INTERVALO_ENTRE_MENSAGENS-diff)/1000)};
+}
+
+function registrarEnvioWhats(){
+  localStorage.setItem("ultimoEnvioWhats", Date.now());
+}
+
+function atualizarEstadoWhats(){
+  document.querySelectorAll(".btn-whats").forEach(btn=>{
+    const r = podeEnviarAgora();
+    if(!r.ok){
+      btn.classList.add("bloqueado");
+      btn.textContent = "⏳ Aguarde "+r.restante+"s";
+      btn.disabled = true;
+    } else {
+      btn.classList.remove("bloqueado");
+      btn.textContent = "💬 WhatsApp";
+      btn.disabled = false;
+    }
+  });
+}
+
+function renderizar(){
+  atualizarContador();
+  const lista = document.getElementById("lista-contatos");
+  lista.innerHTML = "";
+  contatos.forEach((c,idx)=>{
+    const card = document.createElement("div");
+    card.className = "contato-card";
+    const top = document.createElement("div");
+    top.className = "contato-top";
+    top.innerHTML = `<span class='nome'>${c.nome}</span><span class='numero'>${c.numero}</span>`;
+
+    const whats = document.createElement("button");
+    whats.className = "btn-whats";
+    whats.textContent = "💬 WhatsApp";
+    whats.onclick = ()=>{
+      const ctrl = podeEnviarAgora();
+      if(!ctrl.ok) return;
+      registrarEnvioWhats();
+      window.open("https://wa.me/55"+c.numero.replace(/\D/g,"")+"?text="+encodeURIComponent("Olá "+c.nome),"_blank");
+      atualizarEstadoWhats();
+    };
+
+    const salvar = document.createElement("button");
+    salvar.className = "btn-salvar";
+    salvar.textContent = "Salvar";
+    salvar.onclick = ()=>{
+      contatosFeitos.push({nome:c.nome,numero:c.numero,status:"Contato",dataHora:new Date().toLocaleString()});
+      localStorage.setItem("contatosFeitos",JSON.stringify(contatosFeitos));
+      contatos.splice(idx,1);
+      renderizar();
+    };
+
+    top.appendChild(whats);
+    top.appendChild(salvar);
+    card.appendChild(top);
+    lista.appendChild(card);
+  });
+  atualizarEstadoWhats();
+}
+
+function resetGeral(){
+  if(confirm("Apagar tudo?")){
+    localStorage.clear();
+    contatos=[];
+    contatosFeitos=[];
+    renderizar();
+  }
+}
+
+contatos.push({nome:"Exemplo Lead",numero:"11999999999"});
+
+setInterval(atualizarEstadoWhats,1000);
+renderizar();
+</script>
+
+</body>
+</html>
